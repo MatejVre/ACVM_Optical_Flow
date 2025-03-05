@@ -3,15 +3,19 @@ import matplotlib.pyplot as plt
 from ex1_utils import *
 from PIL import Image
 
-i1 = "disparity/office_left.png"
-i2 = "disparity/office_right.png"
+img1 = cv2.imread("disparity/office_left.png")
+img2 = cv2.imread("disparity/office_right.png")
 
-img1 = np.random.rand(200, 200).astype(np.float32)
-img2 = img1.copy()
-img2 = rotate_image(img2, -1)
 
-#img1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
-#img2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+#img1 = np.random.rand(200, 200).astype(np.float32)
+#img2 = img1.copy()
+#img2 = rotate_image(img2, -1)
+
+if len(img1.shape) >= 3:
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+
+if len(img2.shape) >= 3:
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 
 def lucaskanade(im1, im2, N):
@@ -55,9 +59,9 @@ def lucaskanade(im1, im2, N):
 
     return u, v
 
-def hornschunck(im1, im2, n_iters, lam):
+def hornschunck(im1, im2, n_iters, lam, threshold):
 
-    sigma = im1.shape[0] / 200
+    sigma = min(im1.shape)*0.005
     im1 = gausssmooth(im1, sigma)
     im2 = gausssmooth(im2, sigma)
 
@@ -78,6 +82,8 @@ def hornschunck(im1, im2, n_iters, lam):
     kernel = np.array([[0, 1/4, 0],
                        [1/4, 0, 1/4],
                        [0, 1/4, 0]])
+    
+    N = im1.shape[0] * im1.shape[1]
 
     for _ in range(n_iters):
 
@@ -90,10 +96,20 @@ def hornschunck(im1, im2, n_iters, lam):
         u = u_bar - Ix * (P / D)
         v = v_bar - Iy * (P / D)
 
+        sq_diff_u = (u_bar - u)** 2
+        sq_diff_v = (v_bar - v)** 2
+
+        total_diffs = sq_diff_u + sq_diff_v
+        if ((1 / N) * np.sum(total_diffs)) < threshold:
+            print("here")
+            print(np.sum(total_diffs))
+            print(u.shape)
+            return u_bar, v_bar
+
     return u, v
 
 U_lk, V_lk = lucaskanade(img1, img2, 3)
-U_hs, V_hs = hornschunck(img1, img2, 1000, 0.5)
+U_hs, V_hs = hornschunck(img1, img2, 1000, 0.5, 0.0001)
 
 
 fig1, ((ax1_11 ,ax1_12) ,(ax1_21, ax1_22)) = plt.subplots(2, 2)
