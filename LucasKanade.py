@@ -1,7 +1,6 @@
 import cv2
 import matplotlib.pyplot as plt
 from ex1_utils import *
-from PIL import Image
 
 img1 = cv2.imread("disparity/office_left.png")
 img2 = cv2.imread("disparity/office_right.png")
@@ -109,7 +108,7 @@ def hornschunck(im1, im2, n_iters, lam, threshold):
     return u, v
 
 U_lk, V_lk = lucaskanade(img1, img2, 3)
-U_hs, V_hs = hornschunck(img1, img2, 1000, 0.5, 0.0001)
+U_hs, V_hs = hornschunck(img1, img2, 1000, 25, 0.0001)
 
 
 fig1, ((ax1_11 ,ax1_12) ,(ax1_21, ax1_22)) = plt.subplots(2, 2)
